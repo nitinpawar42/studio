@@ -16,25 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { submitContactForm, formSchema } from './actions';
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: 'Name must be at least 2 characters.',
-  }),
-  email: z.string().email({
-    message: 'Please enter a valid email address.',
-  }),
-  message: z.string().min(10, {
-    message: 'Message must be at least 10 characters.',
-  }),
-});
-
-async function submitContactForm(data: z.infer<typeof formSchema>) {
-    'use server';
-    console.log('Form submitted:', data);
-    // Here you would typically send an email or save to a database.
-    return { success: true, message: 'Your message has been sent successfully!' };
-}
 
 export default function ContactPage() {
   const { toast } = useToast();
