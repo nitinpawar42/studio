@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -67,6 +67,7 @@ export default function AdminUsersPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-4xl font-headline">User Management</CardTitle>
+           <CardDescription>Approve or manage user accounts.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -75,6 +76,8 @@ export default function AdminUsersPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Mobile</TableHead>
+                <TableHead>Address</TableHead>
                 <TableHead className="text-right">Approved (Resellers)</TableHead>
               </TableRow>
             </TableHeader>
@@ -88,6 +91,8 @@ export default function AdminUsersPage() {
                       {user.role}
                     </Badge>
                   </TableCell>
+                  <TableCell>{user.mobile || '-'}</TableCell>
+                  <TableCell>{user.address || '-'}</TableCell>
                   <TableCell className="text-right">
                     {user.role === 'reseller' ? (
                       <div className="flex items-center justify-end space-x-2">

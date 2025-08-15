@@ -8,29 +8,35 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { createUserProfile, getUserProfile } from './firestore';
+import type { UserProfile } from '@/types';
 
 const DEFAULT_ADMIN_EMAIL = 'nitinpawar41@gmail.com';
 const DEFAULT_ADMIN_PASSWORD = 'Nirved@12345';
 
-export async function signUpWithEmail(
-  name: string,
-  email: string,
-  password: string,
-  role: 'reseller'
+export async function registerReseller(
+  data: Omit<UserProfile, 'uid' | 'role' | 'approved'> & { password: string }
 ) {
+  const { email, password, displayName, ...rest } = data;
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    await updateProfile(user, { displayName: name });
+    
+    if(displayName) {
+        await updateProfile(user, { displayName });
+    }
 
-    const profileResult = await createUserProfile(user.uid, {
-      displayName: name,
-      email: user.email,
-      role: role,
-      approved: false, // Resellers are not approved by default
-    });
+    const profileData: Omit<UserProfile, 'uid'> = {
+        displayName,
+        email: user.email,
+        role: 'reseller',
+        approved: false, // Resellers are not approved by default
+        ...rest,
+    };
+
+    const profileResult = await createUserProfile(user.uid, profileData);
 
     if ('error' in profileResult) {
+      // Potentially delete the auth user if profile creation fails
       return { user: null, error: profileResult.error };
     }
 

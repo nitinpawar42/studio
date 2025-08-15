@@ -15,10 +15,11 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { signInWithEmail } from '@/lib/firebase/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Link from 'next/link';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -109,6 +110,12 @@ export default function LoginPage() {
                             </Button>
                             </form>
                         </Form>
+                         <div className="mt-4 text-center text-sm">
+                            Don&apos;t have an account?{' '}
+                            <Link href="/register" className="underline">
+                                Create an account
+                            </Link>
+                        </div>
                     </TabsContent>
                     <TabsContent value="admin">
                         <Form {...form}>
