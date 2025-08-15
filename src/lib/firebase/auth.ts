@@ -17,6 +17,11 @@ export async function registerReseller(
 ) {
   const { email, password, displayName, ...rest } = data;
   try {
+    // Admins cannot be registered through this form
+    if (email === ADMIN_EMAIL) {
+        return { user: null, error: { message: 'This email is reserved for the admin account.' } };
+    }
+
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
@@ -41,26 +46,6 @@ export async function registerReseller(
 
     return { user, error: null };
   } catch (error: any) {
-    // If the admin user already exists in auth, this might fail.
-    // We check if it's the admin email and if so, we create the profile.
-    if (error.code === 'auth/email-already-in-use' && email === ADMIN_EMAIL) {
-       try {
-           const { user: signedInUser } = await signInWithEmailAndPassword(auth, email, data.password);
-            let profileResult = await getUserProfile(signedInUser.uid);
-            if (profileResult.error && (profileResult.error as any).code === 'not-found') {
-                 const adminProfileData: Omit<UserProfile, 'uid'> = {
-                    email: signedInUser.email,
-                    displayName: 'Admin',
-                    role: 'admin',
-                    approved: true,
-                };
-                await createUserProfile(signedInUser.uid, adminProfileData);
-            }
-           return { user: signedInUser, error: null };
-       } catch (signInError: any) {
-            return { user: null, error: signInError };
-       }
-    }
     return { user: null, error };
   }
 }
@@ -70,35 +55,35 @@ export async function signInWithEmail(email: string, password: string) {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return { user: userCredential.user, error: null };
   } catch (error: any) {
-    // If sign in fails and it's the admin email, try to create the account.
+    // If sign-in fails because the user is not found, and it's the admin email, create the admin account.
     if (error.code === 'auth/user-not-found' && email === ADMIN_EMAIL) {
-        try {
-            const adminData = {
-                email: ADMIN_EMAIL,
-                password: 'Nirved@12345', // As per your instruction
-                displayName: 'Admin'
-            };
-            const { user, error: creationError } = await createUserWithEmailAndPassword(auth, adminData.email, adminData.password);
-            if(creationError || !user) {
-                return { user: null, error: creationError || 'Failed to create admin user.'};
-            }
-            await updateProfile(user, { displayName: adminData.displayName });
-
-            const adminProfileData: Omit<UserProfile, 'uid'> = {
-                displayName: adminData.displayName,
-                email: user.email,
-                role: 'admin',
-                approved: true
-            };
-            await createUserProfile(user.uid, adminProfileData);
-            
-            // Return the newly created user
-            return { user, error: null };
-
-        } catch (creationError) {
-             return { user: null, error: creationError as any };
+      try {
+        const { user, error: creationError } = await createUserWithEmailAndPassword(auth, email, 'Nirved@12345');
+        
+        if (creationError || !user) {
+          // This could happen if there's a different issue, like network error.
+          return { user: null, error: creationError || new Error('Failed to create admin user.') };
         }
+        
+        // Set the display name and create the Firestore profile.
+        await updateProfile(user, { displayName: 'Admin' });
+        const adminProfileData: Omit<UserProfile, 'uid'> = {
+          displayName: 'Admin',
+          email: user.email,
+          role: 'admin',
+          approved: true,
+        };
+        await createUserProfile(user.uid, adminProfileData);
+        
+        // Return the newly created and signed-in user.
+        return { user, error: null };
+
+      } catch (creationError: any) {
+        // This inner catch handles errors from the creation attempt itself.
+        return { user: null, error: creationError };
+      }
     }
+    // For all other errors, return them directly.
     return { user: null, error };
   }
 }
