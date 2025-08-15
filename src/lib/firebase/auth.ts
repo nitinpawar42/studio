@@ -6,6 +6,8 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 import { createUserProfile, getUserProfile } from './firestore';
 import type { UserProfile } from '@/types';
@@ -100,5 +102,16 @@ export async function signOut() {
     return { error: null };
   } catch (error: any) {
     return { error };
+  }
+}
+
+export async function signInWithGoogle() {
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    return { user, error: null };
+  } catch (error: any) {
+    return { user: null, error };
   }
 }

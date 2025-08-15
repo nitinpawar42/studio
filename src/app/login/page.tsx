@@ -17,13 +17,15 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { signInWithEmail } from '@/lib/firebase/auth';
+import { signInWithEmail, signInWithGoogle } from '@/lib/firebase/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
 import { useState } from 'react';
 import { getUserProfile } from '@/lib/firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { Separator } from '@/components/ui/separator';
+import { Chrome } from 'lucide-react';
 
 
 const formSchema = z.object({
@@ -103,6 +105,37 @@ export default function LoginPage() {
     });
 
     router.push(role === 'admin' ? '/admin/products' : '/account');
+    setIsSubmitting(false);
+  }
+
+  const handleAdminGoogleSignIn = async () => {
+    setIsSubmitting(true);
+    const { user, error } = await signInWithGoogle();
+
+    if (error || !user) {
+      toast({ title: 'Login Failed', description: error?.message || 'Could not sign in with Google.', variant: 'destructive'});
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (user.email !== 'nitinpawar41@gmail.com') {
+      await signOut(auth);
+      toast({ title: 'Access Denied', description: 'Only the designated admin can log in here.', variant: 'destructive'});
+      setIsSubmitting(false);
+      return;
+    }
+
+    // You might still want to check the profile to ensure the role is 'admin' in Firestore
+    const { profile, error: profileError } = await getUserProfile(user.uid);
+    if (profileError || profile?.role !== 'admin') {
+        await signOut(auth);
+        toast({ title: 'Access Denied', description: 'This Google account is not configured as an admin.', variant: 'destructive'});
+        setIsSubmitting(false);
+        return;
+    }
+
+    toast({ title: 'Success!', description: 'Admin logged in successfully.' });
+    router.push('/admin/products');
     setIsSubmitting(false);
   }
 
@@ -195,6 +228,13 @@ export default function LoginPage() {
                             </Button>
                             </form>
                         </Form>
+                        <div className="relative my-4">
+                            <Separator />
+                            <span className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">OR</span>
+                        </div>
+                         <Button variant="outline" className="w-full" onClick={handleAdminGoogleSignIn} disabled={isSubmitting}>
+                           <Chrome className="mr-2 h-4 w-4" /> Sign in with Google
+                        </Button>
                     </TabsContent>
                 </Tabs>
             </CardContent>
