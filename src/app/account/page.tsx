@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { signOut } from '@/lib/firebase/auth';
 import { getUserProfile } from '@/lib/firebase/firestore';
 import type { UserProfile } from '@/types';
@@ -17,7 +17,6 @@ export default function AccountPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -26,10 +25,18 @@ export default function AccountPage() {
       const fetchProfile = async () => {
         setLoading(true);
         const { profile, error } = await getUserProfile(user.uid);
+        
+        // If user is admin, they shouldn't be here.
+        if (profile?.role === 'admin') {
+            router.push('/admin/products');
+            return;
+        }
+
         if (profile) {
           setProfile(profile);
         } else {
-          // If profile not found, might be an issue, sign out
+          // If profile not found, could be an error or they might be an admin.
+          // To be safe, sign out and send to login.
           await signOut();
           router.push('/login');
         }
@@ -45,32 +52,13 @@ export default function AccountPage() {
     router.push('/');
   };
 
-  if (loading || authLoading) {
+  if (loading || authLoading || !profile) {
     return (
       <div className="container py-12 flex justify-center items-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
-
-  // Redirect Admin to their dashboard, but prevent a redirect loop if already there.
-  if (profile?.role === 'admin' && !pathname.startsWith('/admin')) {
-      router.push('/admin/products');
-      return (
-        <div className="container py-12 flex justify-center items-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      );
-  }
-  
-  if (!profile) {
-     return (
-      <div className="container py-12 flex justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
 
   return (
     <div className="container py-12">

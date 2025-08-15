@@ -190,8 +190,8 @@ export default function LoginPage() {
                                 </FormItem>
                                 )}
                             />
-                            <Button type="submit" className="w-full" disabled={adminForm.formState.isSubmitting}>
-                                {adminForm.formState.isSubmitting ? 'Logging in...' : 'Login as Admin'}
+                            <Button type="submit" className="w-full" disabled={isSubmitting}>
+                                {isSubmitting ? 'Logging in...' : 'Login as Admin'}
                             </Button>
                             </form>
                         </Form>
