@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -19,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signUpWithEmail } from '@/lib/firebase/auth';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 
 const formSchema = z.object({
@@ -29,6 +31,9 @@ const formSchema = z.object({
   password: z.string().min(6, {
     message: 'Password must be at least 6 characters.',
   }),
+  role: z.enum(['customer', 'reseller', 'admin'], {
+    required_error: "You need to select a role."
+  })
 });
 
 export default function SignupPage() {
@@ -40,12 +45,13 @@ export default function SignupPage() {
       name: '',
       email: '',
       password: '',
+      role: 'customer',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const { name, email, password } = values;
-    const { error } = await signUpWithEmail(name, email, password);
+    const { name, email, password, role } = values;
+    const { error } = await signUpWithEmail(name, email, password, role);
 
     if (error) {
         toast({
@@ -111,6 +117,48 @@ export default function SignupPage() {
                             <FormMessage />
                         </FormItem>
                         )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>I am a...</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="flex flex-col space-y-1"
+                            >
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="customer" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Customer
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="reseller" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Reseller
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="admin" />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Admin
+                                </FormLabel>
+                              </FormItem>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                     <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                         {form.formState.isSubmitting ? 'Creating account...' : 'Sign Up'}

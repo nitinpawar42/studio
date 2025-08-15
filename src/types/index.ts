@@ -30,9 +30,9 @@ export interface BlogPost {
   imageUrl: string;
 }
 
-export interface User {
+export interface UserProfile {
   uid: string;
   email: string | null;
   displayName: string | null;
-  isAdmin?: boolean;
+  role: 'customer' | 'reseller' | 'admin';
 }

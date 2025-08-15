@@ -9,13 +9,28 @@ import {
   getDoc,
   getDocs,
   getFirestore,
+  setDoc,
   updateDoc,
 } from 'firebase/firestore';
 import { app } from './config';
-import type { Product } from '@/types';
+import type { Product, UserProfile } from '@/types';
 
 const db = getFirestore(app);
 const productsCollection = collection(db, 'products');
+const usersCollection = collection(db, 'users');
+
+// USER PROFILE
+export async function createUserProfile(
+  userId: string,
+  data: Omit<UserProfile, 'uid'>
+) {
+  try {
+    await setDoc(doc(usersCollection, userId), { ...data, uid: userId });
+    return { success: true };
+  } catch (error) {
+    return { error };
+  }
+}
 
 // CREATE
 export async function addProduct(
