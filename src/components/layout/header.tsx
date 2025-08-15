@@ -1,7 +1,8 @@
+// src/components/layout/header.tsx
 'use client';
 
 import Link from 'next/link';
-import { Menu, Search, X, User, Shield, Users } from 'lucide-react';
+import { Menu, Search, X, User, Shield, Users, ShoppingCart, Newspaper, Wand2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import type { UserProfile } from '@/types';
@@ -12,7 +13,10 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import Logo from '@/components/icons/logo';
 import { Input } from '../ui/input';
 
-const mainNav: { href: string; label: string }[] = [
+const mainNav: { href: string; label: string, icon: React.ReactNode }[] = [
+    { href: '/products', label: 'Products', icon: <ShoppingCart /> },
+    { href: '/blog', label: 'Blog', icon: <Newspaper /> },
+    { href: '/recommendations', label: 'For You', icon: <Wand2 /> },
 ];
 
 export default function Header() {
@@ -48,59 +52,65 @@ export default function Header() {
             </span>
           </Link>
         </div>
-
-        {/* Mobile Menu Trigger */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={() => setMobileMenuOpen(true)}
-          aria-label="Open menu"
-        >
-          <Menu className="h-6 w-6" />
-        </Button>
-
-        {/* Desktop Nav */}
-        <div className="hidden md:flex flex-1 items-center justify-center">
-            <div className="relative w-full max-w-sm">
-                 <Input type="search" placeholder="Search for products" className="bg-input border-border/60 pl-10" />
-                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            </div>
-        </div>
-
-        <nav className="hidden md:flex items-center space-x-2 text-lg font-medium ml-auto">
-            {mainNav.map((item) =>
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="transition-colors hover:text-primary px-4 py-2 rounded-md text-sm"
+        
+        {user && (
+            <>
+                {/* Mobile Menu Trigger */}
+                <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open menu"
                 >
-                  {item.label}
-                </Link>
-            )}
-             <Button variant="ghost" size="icon" asChild>
-                <Link href="/account">
-                    <User />
-                    <span className="sr-only">Account</span>
-                </Link>
-            </Button>
-            {isAdmin && (
-                <>
-                 <Button variant="ghost" size="icon" asChild>
-                    <Link href="/admin/products">
-                        <Shield />
-                        <span className="sr-only">Admin Products</span>
-                    </Link>
+                <Menu className="h-6 w-6" />
                 </Button>
-                 <Button variant="ghost" size="icon" asChild>
-                    <Link href="/admin/users">
-                        <Users />
-                        <span className="sr-only">Admin Users</span>
-                    </Link>
-                </Button>
-                </>
-            )}
-        </nav>
+
+                {/* Desktop Nav */}
+                 <div className="hidden md:flex flex-1 items-center justify-center">
+                    <div className="relative w-full max-w-sm">
+                        <Input type="search" placeholder="Search for products" className="bg-input border-border/60 pl-10" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    </div>
+                </div>
+
+                <nav className="hidden md:flex items-center space-x-2 text-lg font-medium ml-auto">
+                    {mainNav.map((item) =>
+                        <Button variant="ghost" asChild key={item.href}>
+                            <Link
+                            href={item.href}
+                            className="transition-colors hover:text-primary px-4 py-2 rounded-md text-sm"
+                            >
+                            {item.icon} {item.label}
+                            </Link>
+                        </Button>
+                    )}
+                    <Button variant="ghost" size="icon" asChild>
+                        <Link href="/account">
+                            <User />
+                            <span className="sr-only">Account</span>
+                        </Link>
+                    </Button>
+                    {isAdmin && (
+                        <>
+                        <Button variant="ghost" size="icon" asChild>
+                            <Link href="/admin/products">
+                                <Shield />
+                                <span className="sr-only">Admin Products</span>
+                            </Link>
+                        </Button>
+                        <Button variant="ghost" size="icon" asChild>
+                            <Link href="/admin/users">
+                                <Users />
+                                <span className="sr-only">Admin Users</span>
+                            </Link>
+                        </Button>
+                        </>
+                    )}
+                </nav>
+            </>
+        )}
+
 
         {/* Mobile Menu */}
         <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -124,17 +134,17 @@ export default function Header() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="py-2 text-xl transition-colors hover:text-primary"
+                      className="py-2 text-xl transition-colors hover:text-primary flex items-center gap-4"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      {item.label}
+                      {item.icon} {item.label}
                     </Link>
                 )}
-                 <Link href="/account" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Account</Link>
+                 <Link href="/account" className="py-2 text-xl transition-colors hover:text-primary flex items-center gap-4" onClick={() => setMobileMenuOpen(false)}><User/> Account</Link>
                  {isAdmin && (
                     <>
-                        <Link href="/admin/products" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Admin: Products</Link>
-                        <Link href="/admin/users" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Admin: Users</Link>
+                        <Link href="/admin/products" className="py-2 text-xl transition-colors hover:text-primary flex items-center gap-4" onClick={() => setMobileMenuOpen(false)}><Shield/> Admin: Products</Link>
+                        <Link href="/admin/users" className="py-2 text-xl transition-colors hover:text-primary flex items-center gap-4" onClick={() => setMobileMenuOpen(false)}><Users/> Admin: Users</Link>
                     </>
                  )}
               </nav>

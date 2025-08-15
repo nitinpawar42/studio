@@ -1,20 +1,32 @@
+// src/app/recommendations/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { personalizedRecommendations } from '@/ai/flows/personalized-recommendations';
-import { Wand2 } from 'lucide-react';
+import { Wand2, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function RecommendationsPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [browsingHistory, setBrowsingHistory] = useState('');
   const [spiritualInterests, setSpiritualInterests] = useState('');
   const [recommendations, setRecommendations] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +47,14 @@ export default function RecommendationsPage() {
       setIsLoading(false);
     }
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="container py-12 flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="container py-12">

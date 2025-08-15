@@ -6,7 +6,7 @@ import Footer from '@/components/layout/footer';
 import { AuthProvider } from '@/hooks/use-auth';
 
 export const metadata: Metadata = {
-  title: 'God Idols',
+  title: 'DivineGems',
   description: 'Premium God Idols. Bring Home Divine Blessings.',
 };
 
