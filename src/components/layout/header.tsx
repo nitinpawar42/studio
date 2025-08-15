@@ -48,7 +48,7 @@ export default function Header() {
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Logo className="h-8 w-8 text-primary" />
             <span className="hidden font-bold sm:inline-block font-headline text-2xl tracking-wider">
-              GOD IDOLS
+              SWASTIK CONNECT
             </span>
           </Link>
         </div>
@@ -119,7 +119,7 @@ export default function Header() {
               <div className="flex items-center justify-between border-b pb-4">
                  <Link href="/" className="flex items-center space-x-2" onClick={() => setMobileMenuOpen(false)}>
                     <Logo className="h-6 w-6 text-primary" />
-                    <span className="font-bold font-headline text-xl">GOD IDOLS</span>
+                    <span className="font-bold font-headline text-xl">SWASTIK CONNECT</span>
                   </Link>
                   <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
                     <X className="h-6 w-6" />
