@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import Logo from '@/components/icons/logo';
 import { Input } from '../ui/input';
+import { Skeleton } from '../ui/skeleton';
+
 
 const mainNav: { href: string; label: string, icon: React.ReactNode }[] = [
     { href: '/products', label: 'Products', icon: <ShoppingCart /> },
@@ -21,7 +23,7 @@ const mainNav: { href: string; label: string, icon: React.ReactNode }[] = [
 
 export default function Header() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
    useEffect(() => {
@@ -53,7 +55,15 @@ export default function Header() {
           </Link>
         </div>
         
-        {user && (
+        {loading && (
+          <div className='ml-auto hidden md:flex items-center gap-2'>
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+        )}
+        
+        {!loading && user && (
             <>
                 {/* Mobile Menu Trigger */}
                 <Button
