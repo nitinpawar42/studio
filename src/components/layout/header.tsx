@@ -12,10 +12,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import Logo from '@/components/icons/logo';
 import { Input } from '../ui/input';
 
-const mainNav = [
-  { href: '/products?category=ganesha', label: 'Ganesha' },
-  { href: '/products?category=krishna', label: 'Krishna' },
-  { href: '/products?category=lakshmi', label: 'Lakshmi' },
+const mainNav: { href: string; label: string }[] = [
 ];
 
 export default function Header() {
