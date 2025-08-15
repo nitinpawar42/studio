@@ -146,15 +146,31 @@ export async function deleteProduct(
 export async function addResellerCustomer(
   resellerId: string,
   customerData: Omit<ResellerCustomer, 'id' | 'resellerId'>
-): Promise<{ id: string } | { error: any }> {
+): Promise<{ customer: ResellerCustomer } | { error: any }> {
   try {
     const customersCollection = collection(db, 'users', resellerId, 'customers');
     const docRef = await addDoc(customersCollection, { ...customerData, resellerId });
-    return { id: docRef.id };
+    const newCustomer = { id: docRef.id, resellerId, ...customerData };
+    return { customer: newCustomer };
   } catch (error) {
     return { error };
   }
 }
+
+export async function updateResellerCustomer(
+    resellerId: string,
+    customerId: string,
+    customerData: Partial<Omit<ResellerCustomer, 'id' | 'resellerId'>>
+): Promise<{ success: boolean } | { error: any }> {
+    try {
+        const docRef = doc(db, 'users', resellerId, 'customers', customerId);
+        await updateDoc(docRef, customerData);
+        return { success: true };
+    } catch (error) {
+        return { error };
+    }
+}
+
 
 export async function getResellerCustomers(resellerId: string): Promise<{ customers?: ResellerCustomer[], error?: any }> {
   try {

@@ -20,6 +20,7 @@ import {
   addResellerCustomer,
   getResellerCustomers,
   deleteResellerCustomer,
+  updateResellerCustomer,
 } from '@/lib/firebase/firestore';
 import { PlusCircle, Edit, Trash2, Loader2 } from 'lucide-react';
 import CustomerFormModal from './customer-form-modal';
@@ -69,21 +70,29 @@ export default function ResellerCustomersPage() {
 
   const handleFormSubmit = async (customerData: Omit<ResellerCustomer, 'id' | 'resellerId'>) => {
     if (!user) return;
-    
-    // In a real app, you would have an update function as well
-    // For now, we just add a new one. This logic should be expanded.
-    const { id, error } = await addResellerCustomer(user.uid, customerData);
 
-    if (error) {
-       toast({ title: 'Error', description: 'Could not save customer.', variant: 'destructive' });
+    if (editingCustomer) {
+      // Update existing customer
+      const { error } = await updateResellerCustomer(user.uid, editingCustomer.id, customerData);
+      if (error) {
+        toast({ title: 'Error', description: 'Could not update customer.', variant: 'destructive' });
+      } else {
+        toast({ title: 'Success', description: 'Customer updated successfully.' });
+        setCustomers(customers.map(c => c.id === editingCustomer.id ? { ...c, ...customerData } : c));
+      }
     } else {
+      // Add new customer
+      const { customer: newCustomer, error } = await addResellerCustomer(user.uid, customerData);
+      if (error || !newCustomer) {
+        toast({ title: 'Error', description: 'Could not save customer.', variant: 'destructive' });
+      } else {
         toast({ title: 'Success', description: 'Customer saved successfully.' });
-        // Refetch or update state
-        const { customers: fetchedCustomers } = await getResellerCustomers(user.uid);
-        if(fetchedCustomers) setCustomers(fetchedCustomers);
-        setIsModalOpen(false);
-        setEditingCustomer(null);
+        setCustomers([...customers, newCustomer]);
+      }
     }
+
+    setIsModalOpen(false);
+    setEditingCustomer(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -162,7 +171,6 @@ export default function ResellerCustomersPage() {
                       <TableCell>{customer.mobile}</TableCell>
                       <TableCell>{customer.shippingAddress}, {customer.pincode}</TableCell>
                       <TableCell className="text-right">
-                        {/* Edit functionality would open the modal with the customer data */}
                         <Button variant="ghost" size="icon" onClick={() => { setEditingCustomer(customer); setIsModalOpen(true); }}>
                           <Edit />
                           <span className="sr-only">Edit</span>
