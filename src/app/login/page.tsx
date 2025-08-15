@@ -15,12 +15,16 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { signInWithEmail, signInWithGoogleAsAdmin } from '@/lib/firebase/auth';
+import { signInWithEmail } from '@/lib/firebase/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
 import { useState } from 'react';
+import { getUserProfile } from '@/lib/firebase/firestore';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
+
 
 const formSchema = z.object({
   email: z.string().email({
@@ -37,7 +41,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const resellerForm = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
@@ -45,43 +49,71 @@ export default function LoginPage() {
     },
   });
 
-  async function onResellerSubmit(values: z.infer<typeof formSchema>) {
+  const adminForm = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: 'nitinpawar41@gmail.com',
+      password: '',
+    },
+  });
+
+  async function handleLogin(values: z.infer<typeof formSchema>, role: 'reseller' | 'admin') {
     setIsSubmitting(true);
     const { email, password } = values;
-    const { error } = await signInWithEmail(email, password);
+    const { user, error } = await signInWithEmail(email, password);
 
-    if (error) {
+    if (error || !user) {
+      toast({
+        title: 'Login Failed',
+        description: error?.message || 'An unknown error occurred.',
+        variant: 'destructive',
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Verify role from Firestore
+    const { profile, error: profileError } = await getUserProfile(user.uid);
+    
+    if (profileError || !profile) {
+      await signOut(auth); // Sign out if profile doesn't exist
+      toast({
+        title: 'Login Failed',
+        description: 'Could not find a user profile for this account.',
+        variant: 'destructive',
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (profile.role !== role) {
+       await signOut(auth); // Sign out if role is incorrect
+       toast({
+        title: 'Access Denied',
+        description: `You are not authorized to log in as a ${role}.`,
+        variant: 'destructive',
+      });
+       setIsSubmitting(false);
+       return;
+    }
+    
+    if (role === 'reseller' && !profile.approved) {
+        await signOut(auth);
         toast({
-            title: 'Error',
-            description: error.message,
+            title: 'Account Pending',
+            description: "Your reseller account is pending approval.",
             variant: 'destructive',
         });
-    } else {
-        toast({
-            title: 'Success!',
-            description: 'You have successfully logged in.',
-        });
-        router.push('/account');
+        setIsSubmitting(false);
+        return;
     }
-    setIsSubmitting(false);
-  }
-  
-  async function onAdminSubmit() {
-    setIsSubmitting(true);
-    const { error } = await signInWithGoogleAsAdmin();
-    if (error) {
-        toast({
-            title: 'Admin Login Failed',
-            description: error.message,
-            variant: 'destructive',
-        });
-    } else {
-         toast({
-            title: 'Success!',
-            description: 'Admin login successful.',
-        });
-        router.push('/admin/products');
-    }
+
+    toast({
+      title: 'Success!',
+      description: 'You have successfully logged in.',
+    });
+
+    router.push(role === 'admin' ? '/admin/products' : '/account');
     setIsSubmitting(false);
   }
 
@@ -100,10 +132,10 @@ export default function LoginPage() {
                         <TabsTrigger value="admin">Admin</TabsTrigger>
                     </TabsList>
                     <TabsContent value="reseller">
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onResellerSubmit)} className="space-y-4 pt-4">
+                        <Form {...resellerForm}>
+                            <form onSubmit={resellerForm.handleSubmit((values) => handleLogin(values, 'reseller'))} className="space-y-4 pt-4">
                             <FormField
-                                control={form.control}
+                                control={resellerForm.control}
                                 name="email"
                                 render={({ field }) => (
                                 <FormItem>
@@ -116,7 +148,7 @@ export default function LoginPage() {
                                 )}
                             />
                             <FormField
-                                control={form.control}
+                                control={resellerForm.control}
                                 name="password"
                                 render={({ field }) => (
                                 <FormItem>
@@ -141,12 +173,39 @@ export default function LoginPage() {
                         </div>
                     </TabsContent>
                     <TabsContent value="admin">
-                       <div className="pt-4 space-y-4">
-                            <p className="text-center text-sm text-muted-foreground">Only authorized administrators can log in here.</p>
-                             <Button onClick={onAdminSubmit} className="w-full" disabled={isSubmitting}>
-                                {isSubmitting ? 'Signing in...' : 'Sign in with Google'}
+                       <Form {...adminForm}>
+                            <form onSubmit={adminForm.handleSubmit((values) => handleLogin(values, 'admin'))} className="space-y-4 pt-4">
+                            <FormField
+                                control={adminForm.control}
+                                name="email"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                    <Input type="email" {...field} readOnly />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={adminForm.control}
+                                name="password"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Password</FormLabel>
+                                    <FormControl>
+                                    <Input type="password" placeholder="Admin Password" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <Button type="submit" className="w-full" disabled={isSubmitting}>
+                                {isSubmitting ? 'Logging in...' : 'Login as Admin'}
                             </Button>
-                       </div>
+                            </form>
+                        </Form>
                     </TabsContent>
                 </Tabs>
             </CardContent>

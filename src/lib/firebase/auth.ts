@@ -6,8 +6,6 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
-  GoogleAuthProvider,
-  signInWithPopup,
 } from 'firebase/auth';
 import { createUserProfile, getUserProfile } from './firestore';
 import type { UserProfile } from '@/types';
@@ -43,77 +41,33 @@ export async function registerReseller(
 
     return { user, error: null };
   } catch (error: any) {
+    // If the admin user already exists in auth, this might fail.
+    // We check if it's the admin email and if so, we create the profile.
+    if (error.code === 'auth/email-already-in-use' && email === ADMIN_EMAIL) {
+       try {
+           const { user: signedInUser } = await signInWithEmailAndPassword(auth, email, data.password);
+            let profileResult = await getUserProfile(signedInUser.uid);
+            if (profileResult.error && (profileResult.error as any).code === 'not-found') {
+                 const adminProfileData: Omit<UserProfile, 'uid'> = {
+                    email: signedInUser.email,
+                    displayName: 'Admin',
+                    role: 'admin',
+                    approved: true,
+                };
+                await createUserProfile(signedInUser.uid, adminProfileData);
+            }
+           return { user: signedInUser, error: null };
+       } catch (signInError: any) {
+            return { user: null, error: signInError };
+       }
+    }
     return { user: null, error };
   }
 }
-
-export async function signInWithGoogleAsAdmin() {
-  const provider = new GoogleAuthProvider();
-  try {
-    const userCredential = await signInWithPopup(auth, provider);
-    const user = userCredential.user;
-
-    if (user.email !== ADMIN_EMAIL) {
-      await firebaseSignOut(auth);
-      return { user: null, error: { message: 'This account is not authorized for admin access.' } };
-    }
-
-    // Check if user profile exists, if not, create it
-    let profileResult = await getUserProfile(user.uid);
-
-    if (profileResult.error && (profileResult.error as any).code === 'not-found') {
-      const adminProfileData: Omit<UserProfile, 'uid'> = {
-        email: user.email,
-        displayName: user.displayName || 'Admin',
-        role: 'admin',
-        approved: true,
-      };
-      await createUserProfile(user.uid, adminProfileData);
-      profileResult = await getUserProfile(user.uid);
-    }
-
-    if (profileResult.error) {
-      await firebaseSignOut(auth);
-      return { user: null, error: profileResult.error };
-    }
-    
-    const profile = (profileResult as { profile: UserProfile | null }).profile;
-
-    if (profile?.role !== 'admin') {
-       await firebaseSignOut(auth);
-       return { user: null, error: { message: 'This account does not have admin privileges.' } };
-    }
-    
-    return { user, error: null };
-  } catch (error: any) {
-    return { user: null, error };
-  }
-}
-
 
 export async function signInWithEmail(email: string, password: string) {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-
-    const { profile, error: profileError } = await getUserProfile(user.uid);
-    
-    if (profileError || !profile) {
-         await firebaseSignOut(auth);
-         return { user: null, error: { message: "Could not find a user profile for this account." } };
-    }
-    
-    // Check if the role matches
-    if(profile.role !== 'reseller') {
-        await firebaseSignOut(auth);
-        return { user: null, error: { message: `You are not authorized to log in as a reseller.` } };
-    }
-
-    if (profile.role === 'reseller' && !profile.approved) {
-        await firebaseSignOut(auth);
-        return { user: null, error: { message: "Your reseller account is pending approval. You'll be notified once it's approved." } };
-    }
-    
     return { user: userCredential.user, error: null };
   } catch (error: any) {
     return { user: null, error };
