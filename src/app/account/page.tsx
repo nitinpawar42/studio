@@ -21,22 +21,25 @@ export default function AccountPage() {
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
-    } else if (user) {
+      return;
+    } 
+    
+    if (user) {
       const fetchProfile = async () => {
         setLoading(true);
         const { profile, error } = await getUserProfile(user.uid);
         
-        // If user is admin, they shouldn't be here.
         if (profile?.role === 'admin') {
             router.push('/admin/products');
+            // Do not proceed with rendering for admins to prevent loops
             return;
         }
 
         if (profile) {
           setProfile(profile);
         } else {
-          // If profile not found, could be an error or they might be an admin.
-          // To be safe, sign out and send to login.
+          // If profile not found, it could be an error.
+          // Sign out and send to login to be safe.
           await signOut();
           router.push('/login');
         }
@@ -52,6 +55,8 @@ export default function AccountPage() {
     router.push('/');
   };
 
+  // Show loader while auth is in progress or profile is being fetched.
+  // Also, if the profile is for an admin, this component will not render its main content.
   if (loading || authLoading || !profile) {
     return (
       <div className="container py-12 flex justify-center items-center">
@@ -59,6 +64,12 @@ export default function AccountPage() {
       </div>
     );
   }
+
+  // Final check to ensure we don't render for an admin who might have slipped through.
+  if (profile.role === 'admin') {
+      return null;
+  }
+
 
   return (
     <div className="container py-12">
