@@ -32,6 +32,21 @@ export async function createUserProfile(
   }
 }
 
+export async function getUserProfile(userId: string): Promise<{ profile: UserProfile | null } | { error: any }> {
+    try {
+        const docRef = doc(usersCollection, userId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return { profile: { uid: docSnap.id, ...docSnap.data() } as UserProfile };
+        } else {
+            return { profile: null };
+        }
+    } catch (error) {
+        return { error };
+    }
+}
+
+
 // CREATE
 export async function addProduct(
   product: Omit<Product, 'id'>

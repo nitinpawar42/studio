@@ -4,10 +4,12 @@ import { auth } from './config';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut as firebaseSignOut,
   updateProfile,
 } from 'firebase/auth';
-import { createUserProfile } from './firestore';
+import { createUserProfile, getUserProfile } from './firestore';
 
 export async function signUpWithEmail(
   name: string,
@@ -43,6 +45,41 @@ export async function signInWithEmail(email: string, password: string) {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return { user: userCredential.user, error: null };
+  } catch (error: any) {
+    return { user: null, error };
+  }
+}
+
+export async function signInWithGoogle(role: 'customer' | 'reseller' | 'admin' = 'customer') {
+  const provider = new GoogleAuthProvider();
+  try {
+    const userCredential = await signInWithPopup(auth, provider);
+    const user = userCredential.user;
+
+    // Check if user profile already exists
+    const existingProfile = await getUserProfile(user.uid);
+    if ('error' in existingProfile) {
+        // If it's a 'not-found' error, we can proceed to create the profile
+        if ((existingProfile.error as any)?.code !== 'not-found') {
+            return { user: null, error: existingProfile.error };
+        }
+    }
+    
+    if (!existingProfile.profile) {
+        // Create user profile in Firestore if it doesn't exist
+        const profileResult = await createUserProfile(user.uid, {
+            displayName: user.displayName,
+            email: user.email,
+            role: role,
+        });
+
+        if ('error' in profileResult) {
+            return { user: null, error: profileResult.error };
+        }
+    }
+
+
+    return { user, error: null };
   } catch (error: any) {
     return { user: null, error };
   }

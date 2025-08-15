@@ -18,7 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signInWithEmail } from '@/lib/firebase/auth';
+import { signInWithEmail, signInWithGoogle } from '@/lib/firebase/auth';
+import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -59,6 +60,23 @@ export default function LoginPage() {
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    const { error } = await signInWithGoogle('admin');
+    if (error) {
+      toast({
+        title: 'Error signing in with Google',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Success!',
+        description: 'You have successfully logged in.',
+      });
+      router.push('/account');
+    }
+  };
+
   return (
     <div className="container py-12">
        <div className="max-w-md mx-auto">
@@ -69,7 +87,7 @@ export default function LoginPage() {
             </CardHeader>
             <CardContent>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                         control={form.control}
                         name="email"
@@ -101,6 +119,10 @@ export default function LoginPage() {
                     </Button>
                     </form>
                 </Form>
+                 <Separator className="my-6" />
+                 <Button onClick={handleGoogleSignIn} variant="outline" className="w-full">
+                    Sign In with Google
+                 </Button>
                  <div className="mt-4 text-center text-sm">
                     Don&apos;t have an account?{' '}
                     <Link href="/signup" className="underline">

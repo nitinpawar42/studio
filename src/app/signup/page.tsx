@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -19,9 +18,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signUpWithEmail } from '@/lib/firebase/auth';
+import { signUpWithEmail, signInWithGoogle } from '@/lib/firebase/auth';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-
+import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   name: z.string().min(2, {message: 'Name must be at least 2 characters.'}),
@@ -48,6 +47,7 @@ export default function SignupPage() {
       role: 'customer',
     },
   });
+  const selectedRole = form.watch('role');
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const { name, email, password, role } = values;
@@ -67,6 +67,25 @@ export default function SignupPage() {
         router.push('/account');
     }
   }
+  
+  const handleGoogleSignIn = async () => {
+    const role = selectedRole === 'admin' ? 'admin' : 'customer';
+    const { error } = await signInWithGoogle(role);
+    if (error) {
+      toast({
+        title: 'Error signing in with Google',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Success!',
+        description: 'You have successfully signed in.',
+      });
+      router.push('/account');
+    }
+  };
+
 
   return (
     <div className="container py-12">
@@ -78,7 +97,7 @@ export default function SignupPage() {
             </CardHeader>
             <CardContent>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                      <FormField
                         control={form.control}
                         name="name"
@@ -146,12 +165,12 @@ export default function SignupPage() {
                                   Reseller
                                 </FormLabel>
                               </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormItem className="flex items-center space-x-3 space-y-0" >
                                 <FormControl>
-                                  <RadioGroupItem value="admin" />
+                                  <RadioGroupItem value="admin" disabled/>
                                 </FormControl>
-                                <FormLabel className="font-normal">
-                                  Admin
+                                <FormLabel className="font-normal text-muted-foreground">
+                                  Admin (Google Sign-in only)
                                 </FormLabel>
                               </FormItem>
                             </RadioGroup>
@@ -161,10 +180,14 @@ export default function SignupPage() {
                       )}
                     />
                     <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting ? 'Creating account...' : 'Sign Up'}
+                        {form.formState.isSubmitting ? 'Creating account...' : 'Sign Up with Email'}
                     </Button>
                     </form>
                 </Form>
+                 <Separator className="my-6" />
+                 <Button onClick={handleGoogleSignIn} variant="outline" className="w-full">
+                    Sign Up with Google
+                 </Button>
                 <div className="mt-4 text-center text-sm">
                     Already have an account?{' '}
                     <Link href="/login" className="underline">
