@@ -11,6 +11,7 @@ import { createUserProfile, getUserProfile } from './firestore';
 import type { UserProfile } from '@/types';
 
 const ADMIN_EMAIL = 'nitinpawar41@gmail.com';
+const ADMIN_PASSWORD = 'Nirved@12345';
 
 export async function registerReseller(
   data: Omit<UserProfile, 'uid' | 'role' | 'approved'> & { password: string }
@@ -52,38 +53,44 @@ export async function registerReseller(
 
 export async function signInWithEmail(email: string, password: string) {
   try {
+    // Special handling for initial admin creation
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        try {
+            // Try to sign in first
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            return { user: userCredential.user, error: null };
+        } catch (error: any) {
+            // If the user doesn't exist, create it
+            if (error.code === 'auth/user-not-found') {
+                try {
+                    const adminCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const adminUser = adminCredential.user;
+                    await updateProfile(adminUser, { displayName: 'Admin' });
+
+                    const adminProfileData: Omit<UserProfile, 'uid'> = {
+                        displayName: 'Admin',
+                        email: adminUser.email,
+                        role: 'admin',
+                        approved: true,
+                    };
+                    await createUserProfile(adminUser.uid, adminProfileData);
+                    
+                    return { user: adminUser, error: null };
+                } catch (creationError: any) {
+                    // This could happen if there's a different issue, like network error during creation.
+                    return { user: null, error: creationError };
+                }
+            }
+             // For other sign-in errors (like wrong password), return the error
+            return { user: null, error };
+        }
+    }
+
+    // Standard sign-in for resellers
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return { user: userCredential.user, error: null };
-  } catch (error: any) {
-    // If sign-in fails because the user is not found, and it's the admin email, create the admin account.
-    if (error.code === 'auth/user-not-found' && email === ADMIN_EMAIL) {
-      try {
-        const { user, error: creationError } = await createUserWithEmailAndPassword(auth, email, 'Nirved@12345');
-        
-        if (creationError || !user) {
-          // This could happen if there's a different issue, like network error.
-          return { user: null, error: creationError || new Error('Failed to create admin user.') };
-        }
-        
-        // Set the display name and create the Firestore profile.
-        await updateProfile(user, { displayName: 'Admin' });
-        const adminProfileData: Omit<UserProfile, 'uid'> = {
-          displayName: 'Admin',
-          email: user.email,
-          role: 'admin',
-          approved: true,
-        };
-        await createUserProfile(user.uid, adminProfileData);
-        
-        // Return the newly created and signed-in user.
-        return { user, error: null };
 
-      } catch (creationError: any) {
-        // This inner catch handles errors from the creation attempt itself.
-        return { user: null, error: creationError };
-      }
-    }
-    // For all other errors, return them directly.
+  } catch (error: any) {
     return { user: null, error };
   }
 }
