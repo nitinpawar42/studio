@@ -126,7 +126,6 @@ export default function ProductDetailClient({ product }: { product: Product }) {
               <Zap className="mr-2 h-5 w-5" /> Buy Now
             </Button>
           </div>
-          <p className="text-center text-sm text-green-600 font-semibold">COD Available</p>
           
           <Separator />
 

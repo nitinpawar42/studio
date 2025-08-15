@@ -31,15 +31,16 @@ export async function checkPincodeServicability(pincode: string): Promise<{ serv
     }
 
     const pincodeData = data.delivery_codes[0];
+    const postalCode = pincodeData.postal_code;
+
     // "Embargo" indicates temporary non-serviceability
-    if (pincodeData.postal_code.sort_code === 'Embargo') {
+    if (postalCode.sort_code === 'Embargo') {
         return { serviceable: false, message: 'Service to this pincode is temporarily unavailable.' };
     }
     
-    // Check if both COD and Prepaid are 'N'.
-    const postalCode = pincodeData.postal_code;
-    if (postalCode.cod === 'N' && postalCode.pre_paid === 'N') {
-      return { serviceable: false, message: 'No payment methods available for this pincode.' };
+    // Check if Prepaid is 'N'. If it is, then it's not serviceable for our store.
+    if (postalCode.pre_paid === 'N') {
+      return { serviceable: false, message: 'Delivery is not available for this pincode.' };
     }
 
     return { serviceable: true, message: 'This pincode is serviceable.' };
