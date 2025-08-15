@@ -60,8 +60,8 @@ export default function RegisterPage() {
       });
     } else {
       toast({
-        title: 'Registration Successful!',
-        description: "Your account has been created and is pending approval.",
+        title: 'Thank you for registering with us!',
+        description: "We will send you an email once your account is approved.",
       });
       router.push('/login');
     }
