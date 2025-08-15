@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/types';
 import { getProducts, deleteProduct } from '@/lib/firebase/firestore';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,14 +69,17 @@ export default function AdminProductsPage() {
   };
 
   if (loading) {
-    return <div className="container py-12">Loading products...</div>;
+    return <div className="p-12 flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
   return (
-    <div className="container py-12">
+    <div className="p-4 sm:p-6 lg:p-8">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-4xl font-headline">Product Management</CardTitle>
+            <div>
+                 <CardTitle className="text-4xl font-headline">Product Management</CardTitle>
+                 <CardDescription>Add, edit, or delete products.</CardDescription>
+            </div>
           <Button asChild>
             <Link href="/admin/products/new">
               <PlusCircle className="mr-2" /> Add New Product

@@ -2,7 +2,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Table,
@@ -18,6 +17,7 @@ import { getAllUsers, updateUserProfile } from '@/lib/firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -59,11 +59,11 @@ export default function AdminUsersPage() {
   };
 
   if (loading) {
-    return <div className="container py-12">Loading users...</div>;
+    return <div className="p-12 flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
   return (
-    <div className="container py-12">
+    <div className="p-4 sm:p-6 lg:p-8">
       <Card>
         <CardHeader>
           <CardTitle className="text-4xl font-headline">User Management</CardTitle>
