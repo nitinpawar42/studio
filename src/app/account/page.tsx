@@ -1,6 +1,7 @@
 // src/app/account/page.tsx
 'use client';
 
+import { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,13 +17,15 @@ export default function AccountPage() {
     router.push('/');
   };
 
-  if (loading) {
-    return <div className="container py-12">Loading...</div>;
-  }
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
 
-  if (!user) {
-    router.push('/login');
-    return null;
+  if (loading || !user) {
+    // Display a loading state or nothing while redirecting
+    return <div className="container py-12">Loading...</div>;
   }
 
   return (
