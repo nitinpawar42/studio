@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, ShoppingCart, X, ChevronDown } from 'lucide-react';
+import { Menu, ShoppingCart, X, ChevronDown, User as UserIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -10,13 +10,16 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import Logo from '@/components/icons/logo';
 import { categories } from '@/lib/mock-data';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { signOut } from '@/lib/firebase/auth';
 
 const mainNav = [
   { href: '/', label: 'Home' },
@@ -28,6 +31,13 @@ const mainNav = [
 
 export default function Header() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -105,13 +115,41 @@ export default function Header() {
                 <span className="font-bold font-headline">DivineGems</span>
             </Link>
           </div>
-          <div className="relative">
-            <Button variant="ghost" size="icon" aria-label="Open cart">
-              <ShoppingCart className="h-6 w-6" />
-            </Button>
-            <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-              0
+          <div className="flex items-center gap-2">
+            <div className="relative">
+                <Button variant="ghost" size="icon" aria-label="Open cart">
+                <ShoppingCart className="h-6 w-6" />
+                </Button>
+                <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                0
+                </div>
             </div>
+            
+            {!loading && (
+                user ? (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                             <Button variant="ghost" size="icon" aria-label="User account">
+                                <UserIcon className="h-6 w-6" />
+                             </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem asChild>
+                                <Link href="/account">My Account</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                                Sign Out
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                ) : (
+                    <Button asChild>
+                        <Link href="/login">Login</Link>
+                    </Button>
+                )
+            )}
+
           </div>
         </div>
       </div>
