@@ -2,7 +2,8 @@
 
 import * as z from 'zod';
 
-export const formSchema = z.object({
+// This is now defined in the page.tsx component
+const formSchema = z.object({
   name: z.string().min(2, {
     message: 'Name must be at least 2 characters.',
   }),
