@@ -4,48 +4,48 @@
 
 @layer base {
   :root {
-    --background: 60 56% 91%; /* light beige #f5f5dc */
-    --foreground: 40 10% 20%; /* dark brown */
-    --card: 55 40% 95%; /* slightly different beige for cards */
-    --card-foreground: 40 10% 20%;
-    --popover: 55 40% 95%;
-    --popover-foreground: 40 10% 20%;
-    --primary: 34 100% 50%; /* deep saffron #ff8f00 */
+    --background: 40 10% 10%; /* very dark brown */
+    --foreground: 30 25% 95%; /* light beige */
+    --card: 40 10% 15%; /* slightly lighter dark brown for cards */
+    --card-foreground: 30 25% 95%;
+    --popover: 40 10% 10%;
+    --popover-foreground: 30 25% 95%;
+    --primary: 35 80% 60%; /* golden amber */
     --primary-foreground: 40 10% 10%;
-    --secondary: 45 30% 85%;
-    --secondary-foreground: 40 10% 10%;
-    --muted: 45 30% 90%;
-    --muted-foreground: 40 10% 40%;
-    --accent: 43 90% 38%; /* muted gold #b8860b */
-    --accent-foreground: 40 10% 95%; /* light color for accent */
+    --secondary: 40 10% 20%;
+    --secondary-foreground: 30 25% 95%;
+    --muted: 40 10% 20%;
+    --muted-foreground: 30 25% 70%;
+    --accent: 35 80% 50%; /* brighter gold for accents */
+    --accent-foreground: 40 10% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 45 20% 80%;
-    --input: 45 25% 85%;
-    --ring: 34 100% 50%;
+    --border: 35 30% 30%; /* brown border */
+    --input: 40 10% 25%;
+    --ring: 35 80% 60%;
     --radius: 0.5rem;
   }
  
   .dark {
     --background: 40 10% 10%;
-    --foreground: 60 56% 91%;
+    --foreground: 30 25% 95%;
     --card: 40 10% 15%;
-    --card-foreground: 60 56% 91%;
+    --card-foreground: 30 25% 95%;
     --popover: 40 10% 10%;
-    --popover-foreground: 60 56% 91%;
-    --primary: 34 100% 50%;
+    --popover-foreground: 30 25% 95%;
+    --primary: 35 80% 60%;
     --primary-foreground: 40 10% 10%;
     --secondary: 40 10% 20%;
-    --secondary-foreground: 60 56% 91%;
+    --secondary-foreground: 30 25% 95%;
     --muted: 40 10% 20%;
-    --muted-foreground: 60 56% 70%;
-    --accent: 43 90% 45%; /* brighter gold for dark mode */
+    --muted-foreground: 30 25% 70%;
+    --accent: 35 80% 50%;
     --accent-foreground: 40 10% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 40 10% 25%;
+    --border: 35 30% 30%;
     --input: 40 10% 25%;
-    --ring: 34 100% 50%;
+    --ring: 35 80% 60%;
   }
 }
 

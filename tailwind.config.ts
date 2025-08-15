@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Literata', 'serif'],
-        headline: ['Playfair Display', 'serif'],
+        body: ['Merriweather', 'serif'],
+        headline: ['Cinzel', 'serif'],
         code: ['monospace'],
       },
       colors: {
