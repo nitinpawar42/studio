@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { Menu, Search, X, User, Shield, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import type { UserProfile } from '@/types';
+import { getUserProfile } from '@/lib/firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -19,6 +21,24 @@ const mainNav = [
 export default function Header() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+   useEffect(() => {
+    if (user) {
+      const fetchProfile = async () => {
+        const { profile, error } = await getUserProfile(user.uid);
+        if (profile) {
+          setProfile(profile);
+        }
+      };
+      fetchProfile();
+    } else {
+        setProfile(null);
+    }
+  }, [user]);
+
+  const isAdmin = profile?.role === 'admin';
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -67,7 +87,7 @@ export default function Header() {
                     <span className="sr-only">Account</span>
                 </Link>
             </Button>
-            {user && (
+            {isAdmin && (
                 <>
                  <Button variant="ghost" size="icon" asChild>
                     <Link href="/admin/products">
@@ -114,7 +134,7 @@ export default function Header() {
                     </Link>
                 )}
                  <Link href="/account" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Account</Link>
-                 {user && (
+                 {isAdmin && (
                     <>
                         <Link href="/admin/products" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Admin: Products</Link>
                         <Link href="/admin/users" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Admin: Users</Link>

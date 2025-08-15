@@ -11,9 +11,11 @@ import {
   getFirestore,
   setDoc,
   updateDoc,
+  query,
+  where,
 } from 'firebase/firestore';
 import { app } from './config';
-import type { Product, UserProfile } from '@/types';
+import type { Product, UserProfile, ResellerCustomer } from '@/types';
 
 const db = getFirestore(app);
 const productsCollection = collection(db, 'products');
@@ -133,6 +135,45 @@ export async function deleteProduct(
 ): Promise<{ success: boolean } | { error: any }> {
   try {
     const docRef = doc(db, 'products', id);
+    await deleteDoc(docRef);
+    return { success: true };
+  } catch (error) {
+    return { error };
+  }
+}
+
+// RESELLER CUSTOMERS
+export async function addResellerCustomer(
+  resellerId: string,
+  customerData: Omit<ResellerCustomer, 'id' | 'resellerId'>
+): Promise<{ id: string } | { error: any }> {
+  try {
+    const customersCollection = collection(db, 'users', resellerId, 'customers');
+    const docRef = await addDoc(customersCollection, { ...customerData, resellerId });
+    return { id: docRef.id };
+  } catch (error) {
+    return { error };
+  }
+}
+
+export async function getResellerCustomers(resellerId: string): Promise<{ customers?: ResellerCustomer[], error?: any }> {
+  try {
+    const customersCollection = collection(db, 'users', resellerId, 'customers');
+    const q = query(customersCollection, where('resellerId', '==', resellerId));
+    const querySnapshot = await getDocs(q);
+    const customers = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as ResellerCustomer[];
+    return { customers };
+  } catch (error) {
+    return { error };
+  }
+}
+
+export async function deleteResellerCustomer(resellerId: string, customerId: string): Promise<{ success: boolean } | { error: any }> {
+  try {
+    const docRef = doc(db, 'users', resellerId, 'customers', customerId);
     await deleteDoc(docRef);
     return { success: true };
   } catch (error) {

@@ -37,3 +37,13 @@ export interface UserProfile {
   role: 'reseller' | 'admin';
   approved: boolean;
 }
+
+export interface ResellerCustomer {
+  id: string;
+  resellerId: string;
+  name: string;
+  email: string;
+  mobile: string;
+  shippingAddress: string;
+  pincode: string;
+}
