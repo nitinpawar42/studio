@@ -18,10 +18,42 @@ export async function registerReseller(
 ) {
   const { email, password, displayName, ...rest } = data;
   try {
-    // Admins cannot be registered through this form
+    // Handle the initial, one-time creation of the admin user.
+    // This part of the function will only run if the admin account does not yet exist in Firebase Auth.
     if (email === ADMIN_EMAIL) {
-        return { user: null, error: { message: 'This email is reserved for the admin account.' } };
+        // You might want to add an extra layer of security here, 
+        // perhaps a secret key passed in the data object, to prevent just anyone
+        // from triggering this. For now, it's based on the email.
+        if (password !== ADMIN_PASSWORD) {
+            return { user: null, error: { message: 'Invalid credentials for admin setup.'}};
+        }
+        
+        try {
+            const adminCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const adminUser = adminCredential.user;
+            await updateProfile(adminUser, { displayName: 'Admin' });
+
+            const adminProfileData: Omit<UserProfile, 'uid'> = {
+                displayName: 'Admin',
+                email: adminUser.email,
+                role: 'admin',
+                approved: true,
+            };
+            await createUserProfile(adminUser.uid, adminProfileData);
+            
+            // Note: This is for one-time setup. Subsequent registrations with this email will fail
+            // because the user will already exist, which is the intended behavior.
+            return { user: adminUser, error: null };
+        } catch (creationError: any) {
+            // If it fails because the user already exists, that's fine. We can ignore that.
+            if (creationError.code === 'auth/email-already-in-use') {
+                return { user: null, error: { message: 'Admin account already exists.'}};
+            }
+            // For other errors during creation, report them.
+            return { user: null, error: creationError };
+        }
     }
+
 
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -47,49 +79,18 @@ export async function registerReseller(
 
     return { user, error: null };
   } catch (error: any) {
+     // This will catch attempts to register the admin email if it already exists.
+    if (error.code === 'auth/email-already-in-use' && email === ADMIN_EMAIL) {
+        return { user: null, error: { message: 'This email is reserved for the admin account.' } };
+    }
     return { user: null, error };
   }
 }
 
 export async function signInWithEmail(email: string, password: string) {
   try {
-    // Special handling for initial admin creation
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        try {
-            // Try to sign in first
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            return { user: userCredential.user, error: null };
-        } catch (error: any) {
-            // If the user doesn't exist, create it
-            if (error.code === 'auth/user-not-found') {
-                try {
-                    const adminCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    const adminUser = adminCredential.user;
-                    await updateProfile(adminUser, { displayName: 'Admin' });
-
-                    const adminProfileData: Omit<UserProfile, 'uid'> = {
-                        displayName: 'Admin',
-                        email: adminUser.email,
-                        role: 'admin',
-                        approved: true,
-                    };
-                    await createUserProfile(adminUser.uid, adminProfileData);
-                    
-                    return { user: adminUser, error: null };
-                } catch (creationError: any) {
-                    // This could happen if there's a different issue, like network error during creation.
-                    return { user: null, error: creationError };
-                }
-            }
-             // For other sign-in errors (like wrong password), return the error
-            return { user: null, error };
-        }
-    }
-
-    // Standard sign-in for resellers
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return { user: userCredential.user, error: null };
-
   } catch (error: any) {
     return { user: null, error };
   }
