@@ -121,12 +121,12 @@ export default function LoginPage() {
                 </Form>
                  <Separator className="my-6" />
                  <Button onClick={handleGoogleSignIn} variant="outline" className="w-full">
-                    Sign In with Google
+                    Sign In with Google (Admin)
                  </Button>
                  <div className="mt-4 text-center text-sm">
                     Don&apos;t have an account?{' '}
                     <Link href="/signup" className="underline">
-                        Sign up
+                        Sign up as a Reseller
                     </Link>
                 </div>
             </CardContent>

@@ -15,7 +15,7 @@ export async function signUpWithEmail(
   name: string,
   email: string,
   password: string,
-  role: 'customer' | 'reseller'
+  role: 'reseller'
 ) {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -64,7 +64,7 @@ export async function signInWithEmail(email: string, password: string) {
   }
 }
 
-export async function signInWithGoogle(role: 'customer' | 'reseller' | 'admin' = 'customer') {
+export async function signInWithGoogle(role: 'reseller' | 'admin' = 'reseller') {
   const provider = new GoogleAuthProvider();
   try {
     const userCredential = await signInWithPopup(auth, provider);

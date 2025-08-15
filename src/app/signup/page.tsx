@@ -30,7 +30,7 @@ const formSchema = z.object({
   password: z.string().min(6, {
     message: 'Password must be at least 6 characters.',
   }),
-  role: z.enum(['customer', 'reseller'], {
+  role: z.enum(['reseller'], {
     required_error: "You need to select a role."
   })
 });
@@ -44,10 +44,9 @@ export default function SignupPage() {
       name: '',
       email: '',
       password: '',
-      role: 'customer',
+      role: 'reseller',
     },
   });
-  const selectedRole = form.watch('role');
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const { name, email, password, role } = values;
@@ -62,17 +61,14 @@ export default function SignupPage() {
     } else {
         toast({
             title: 'Success!',
-            description: role === 'reseller' 
-                ? "Your account has been created and is pending approval."
-                : 'Your account has been created.',
+            description: "Your reseller account has been created and is pending approval."
         });
-        router.push(role === 'reseller' ? '/login' : '/account');
+        router.push('/login');
     }
   }
   
   const handleGoogleSignIn = async () => {
-    const role = selectedRole;
-    const { error } = await signInWithGoogle(role);
+    const { error } = await signInWithGoogle('reseller');
     if (error) {
       toast({
         title: 'Error signing in with Google',
@@ -94,7 +90,7 @@ export default function SignupPage() {
        <div className="max-w-md mx-auto">
         <Card>
             <CardHeader className="text-center">
-                <CardTitle className="text-4xl font-headline">Create an Account</CardTitle>
+                <CardTitle className="text-4xl font-headline">Create a Reseller Account</CardTitle>
                 <CardDescription>Start your spiritual journey with us</CardDescription>
             </CardHeader>
             <CardContent>
@@ -139,40 +135,6 @@ export default function SignupPage() {
                         </FormItem>
                         )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel>I am a...</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="flex space-x-4"
-                            >
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="customer" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Customer
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="reseller" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Reseller
-                                </FormLabel>
-                              </FormItem>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                     <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                         {form.formState.isSubmitting ? 'Creating account...' : 'Sign Up with Email'}
                     </Button>
@@ -180,7 +142,7 @@ export default function SignupPage() {
                 </Form>
                  <Separator className="my-6" />
                  <div className="space-y-4">
-                    <p className="text-center text-sm text-muted-foreground">Or sign up as a Customer or Reseller with</p>
+                    <p className="text-center text-sm text-muted-foreground">Or sign up as a Reseller with</p>
                     <Button onClick={handleGoogleSignIn} variant="outline" className="w-full">
                         Sign Up with Google
                     </Button>

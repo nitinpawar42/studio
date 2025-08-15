@@ -34,6 +34,6 @@ export interface UserProfile {
   uid: string;
   email: string | null;
   displayName: string | null;
-  role: 'customer' | 'reseller' | 'admin';
+  role: 'reseller' | 'admin';
   approved: boolean;
 }
