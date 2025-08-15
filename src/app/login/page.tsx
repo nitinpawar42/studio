@@ -96,17 +96,6 @@ export default function LoginPage() {
        setIsSubmitting(false);
        return;
     }
-    
-    if (role === 'reseller' && !profile.approved) {
-        await signOut(auth);
-        toast({
-            title: 'Account Pending',
-            description: "Your reseller account is pending approval.",
-            variant: 'destructive',
-        });
-        setIsSubmitting(false);
-        return;
-    }
 
     toast({
       title: 'Success!',

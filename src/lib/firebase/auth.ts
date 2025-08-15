@@ -66,7 +66,7 @@ export async function registerReseller(
         displayName,
         email: user.email,
         role: 'reseller',
-        approved: false, // Resellers are not approved by default
+        approved: true, // Resellers are now approved by default
         ...rest,
     };
 

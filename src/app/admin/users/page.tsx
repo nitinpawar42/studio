@@ -15,8 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/types';
 import { getAllUsers, updateUserProfile } from '@/lib/firebase/firestore';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 
 export default function AdminUsersPage() {
@@ -41,23 +39,6 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, [toast]);
 
-  const handleApprovalChange = async (user: UserProfile, approved: boolean) => {
-    const { error } = await updateUserProfile(user.uid, { approved });
-    if (error) {
-      toast({
-        title: 'Error updating user',
-        description: 'Could not update the user status. Please try again.',
-        variant: 'destructive',
-      });
-    } else {
-      setUsers(users.map(u => (u.uid === user.uid ? { ...u, approved } : u)));
-      toast({
-        title: 'User Updated',
-        description: `${user.displayName}'s approval status has been updated.`,
-      });
-    }
-  };
-
   if (loading) {
     return <div className="p-12 flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
@@ -67,7 +48,7 @@ export default function AdminUsersPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-4xl font-headline">User Management</CardTitle>
-           <CardDescription>Approve or manage user accounts.</CardDescription>
+           <CardDescription>View user accounts.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -78,7 +59,6 @@ export default function AdminUsersPage() {
                 <TableHead>Role</TableHead>
                 <TableHead>Mobile</TableHead>
                 <TableHead>Address</TableHead>
-                <TableHead className="text-right">Approved (Resellers)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -93,22 +73,6 @@ export default function AdminUsersPage() {
                   </TableCell>
                   <TableCell>{user.mobile || '-'}</TableCell>
                   <TableCell>{user.address || '-'}</TableCell>
-                  <TableCell className="text-right">
-                    {user.role === 'reseller' ? (
-                      <div className="flex items-center justify-end space-x-2">
-                        <Label htmlFor={`approved-${user.uid}`} className="sr-only">
-                            Approve Reseller
-                        </Label>
-                        <Switch
-                          id={`approved-${user.uid}`}
-                          checked={user.approved}
-                          onCheckedChange={(checked) => handleApprovalChange(user, checked)}
-                        />
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
