@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, Zap } from 'lucide-react';
+import { ShoppingCart, Zap, Loader2 } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -13,13 +13,46 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { notFound } from 'next/navigation';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { checkPincodeServicability } from './actions';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const product = products.find((p) => p.id === params.id);
+  const { toast } = useToast();
+
+  const [pincode, setPincode] = useState('');
+  const [isServiceable, setIsServiceable] = useState<boolean | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
 
   if (!product) {
     notFound();
   }
+
+  const handlePincodeCheck = async () => {
+    if (!pincode || pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+        toast({ title: 'Invalid Pincode', description: 'Please enter a valid 6-digit pincode.', variant: 'destructive' });
+        return;
+    }
+    setIsChecking(true);
+    setIsServiceable(null);
+    try {
+        const result = await checkPincodeServicability(pincode);
+        if (result.serviceable) {
+            setIsServiceable(true);
+            toast({ title: 'Pincode Serviceable!', description: 'Great news! We can deliver to your location.' });
+        } else {
+            setIsServiceable(false);
+            toast({ title: 'Pincode Not Serviceable', description: result.message, variant: 'destructive' });
+        }
+    } catch (error) {
+        setIsServiceable(false);
+        toast({ title: 'Error', description: 'Could not check pincode serviceability. Please try again.', variant: 'destructive' });
+    } finally {
+        setIsChecking(false);
+    }
+  };
 
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
 
@@ -68,12 +101,34 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           </div>
 
           <p className="text-lg">{product.description}</p>
+
+          <Separator />
           
+           <div className="space-y-4">
+            <h3 className="text-xl font-headline font-semibold">Check Delivery Availability</h3>
+            <div className="flex items-center space-x-2">
+              <Input 
+                type="text" 
+                placeholder="Enter 6-digit Pincode" 
+                maxLength={6}
+                value={pincode}
+                onChange={(e) => setPincode(e.target.value)}
+                className="max-w-xs"
+              />
+              <Button onClick={handlePincodeCheck} disabled={isChecking}>
+                {isChecking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Check
+              </Button>
+            </div>
+            {isServiceable === true && <p className="text-sm font-medium text-green-600">This location is serviceable!</p>}
+            {isServiceable === false && <p className="text-sm font-medium text-destructive">Sorry, we do not deliver to this pincode yet.</p>}
+          </div>
+
           <div className="flex gap-4">
-            <Button size="lg" className="flex-1">
+            <Button size="lg" className="flex-1" disabled={isServiceable !== true}>
               <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
             </Button>
-            <Button size="lg" variant="outline" className="flex-1">
+            <Button size="lg" variant="outline" className="flex-1" disabled={isServiceable !== true}>
               <Zap className="mr-2 h-5 w-5" /> Buy Now
             </Button>
           </div>
