@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, Search, X } from 'lucide-react';
+import { Menu, Search, X, User, Shield } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -17,6 +18,7 @@ const mainNav = [
 
 export default function Header() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -59,6 +61,20 @@ export default function Header() {
                   {item.label}
                 </Link>
             )}
+             <Button variant="ghost" size="icon" asChild>
+                <Link href="/account">
+                    <User />
+                    <span className="sr-only">Account</span>
+                </Link>
+            </Button>
+            {user && (
+                 <Button variant="ghost" size="icon" asChild>
+                    <Link href="/admin/products">
+                        <Shield />
+                        <span className="sr-only">Admin</span>
+                    </Link>
+                </Button>
+            )}
         </nav>
 
         {/* Mobile Menu */}
@@ -89,6 +105,8 @@ export default function Header() {
                       {item.label}
                     </Link>
                 )}
+                 <Link href="/account" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Account</Link>
+                 {user && <Link href="/admin/products" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Admin</Link>}
               </nav>
             </div>
           </SheetContent>
