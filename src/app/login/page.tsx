@@ -17,8 +17,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { signInWithEmail } from '@/lib/firebase/auth';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -28,6 +28,8 @@ const formSchema = z.object({
     message: 'Password must be at least 6 characters.',
   }),
 });
+
+type Role = 'admin' | 'reseller';
 
 export default function LoginPage() {
   const { toast } = useToast();
@@ -40,9 +42,9 @@ export default function LoginPage() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>, role: Role) {
     const { email, password } = values;
-    const { error } = await signInWithEmail(email, password);
+    const { error } = await signInWithEmail(email, password, role);
 
     if (error) {
         toast({
@@ -68,45 +70,82 @@ export default function LoginPage() {
                 <CardDescription>Access your account</CardDescription>
             </CardHeader>
             <CardContent>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                            <Input type="email" placeholder="Your Email" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                            <Input type="password" placeholder="Your Password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
-                    </Button>
-                    </form>
-                </Form>
-                 <div className="mt-4 text-center text-sm">
-                    Don&apos;t have an account?{' '}
-                    <Link href="/signup" className="underline">
-                        Sign up as a Reseller
-                    </Link>
-                </div>
+                <Tabs defaultValue="reseller" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="reseller">Reseller</TabsTrigger>
+                        <TabsTrigger value="admin">Admin</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="reseller">
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit((values) => onSubmit(values, 'reseller'))} className="space-y-4 pt-4">
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                    <Input type="email" placeholder="reseller@example.com" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Password</FormLabel>
+                                    <FormControl>
+                                    <Input type="password" placeholder="Your Password" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                                {form.formState.isSubmitting ? 'Logging in...' : 'Login as Reseller'}
+                            </Button>
+                            </form>
+                        </Form>
+                    </TabsContent>
+                    <TabsContent value="admin">
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit((values) => onSubmit(values, 'admin'))} className="space-y-4 pt-4">
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Admin Email</FormLabel>
+                                    <FormControl>
+                                    <Input type="email" placeholder="admin@example.com" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Admin Password</FormLabel>
+                                    <FormControl>
+                                    <Input type="password" placeholder="Your Password" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                                {form.formSate.isSubmitting ? 'Logging in...' : 'Login as Admin'}
+                            </Button>
+                            </form>
+                        </Form>
+                    </TabsContent>
+                </Tabs>
             </CardContent>
         </Card>
        </div>
