@@ -29,20 +29,21 @@ export default function AccountPage() {
         setLoading(true);
         const { profile, error } = await getUserProfile(user.uid);
         
-        if (profile?.role === 'admin') {
+        if (error || !profile) {
+          // If profile not found or there's an error, sign out to be safe.
+          await signOut();
+          router.push('/login');
+          return;
+        }
+
+        // This is the critical fix: If the user is an admin, they should not be on this page.
+        // Redirect them immediately and do not proceed to set state, preventing any rendering or loops.
+        if (profile.role === 'admin') {
             router.push('/admin/products');
-            // Do not proceed with rendering for admins to prevent loops
             return;
         }
 
-        if (profile) {
-          setProfile(profile);
-        } else {
-          // If profile not found, it could be an error.
-          // Sign out and send to login to be safe.
-          await signOut();
-          router.push('/login');
-        }
+        setProfile(profile);
         setLoading(false);
       };
       fetchProfile();
@@ -55,8 +56,8 @@ export default function AccountPage() {
     router.push('/');
   };
 
-  // Show loader while auth is in progress or profile is being fetched.
-  // Also, if the profile is for an admin, this component will not render its main content.
+  // Show a loader while authentication is in progress or the profile is being fetched.
+  // This state also covers the brief moment before an admin is redirected.
   if (loading || authLoading || !profile) {
     return (
       <div className="container py-12 flex justify-center items-center">
@@ -65,7 +66,7 @@ export default function AccountPage() {
     );
   }
 
-  // Final check to ensure we don't render for an admin who might have slipped through.
+  // This check is redundant because of the useEffect logic, but it's a good safeguard.
   if (profile.role === 'admin') {
       return null;
   }

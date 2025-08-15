@@ -104,7 +104,11 @@ export default function LoginPage() {
       description: 'You have successfully logged in.',
     });
 
-    router.push(role === 'admin' ? '/admin/products' : '/account');
+    if (role === 'admin') {
+        router.push('/admin/products');
+    } else {
+        router.push('/account');
+    }
     setIsSubmitting(false);
   }
 
@@ -118,18 +122,20 @@ export default function LoginPage() {
       return;
     }
 
+    // This is a critical security check.
+    // Only the specified admin email can proceed.
     if (user.email !== 'nitinpawar41@gmail.com') {
       await signOut(auth);
-      toast({ title: 'Access Denied', description: 'Only the designated admin can log in here.', variant: 'destructive'});
+      toast({ title: 'Access Denied', description: 'This Google account is not authorized for admin access.', variant: 'destructive'});
       setIsSubmitting(false);
       return;
     }
 
-    // You might still want to check the profile to ensure the role is 'admin' in Firestore
+    // Verify the role from Firestore as an extra precaution.
     const { profile, error: profileError } = await getUserProfile(user.uid);
     if (profileError || profile?.role !== 'admin') {
         await signOut(auth);
-        toast({ title: 'Access Denied', description: 'This Google account is not configured as an admin.', variant: 'destructive'});
+        toast({ title: 'Access Denied', description: 'This Google account is not configured as an admin in the database.', variant: 'destructive'});
         setIsSubmitting(false);
         return;
     }
