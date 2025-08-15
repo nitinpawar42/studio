@@ -18,9 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signUpWithEmail, signInWithGoogle } from '@/lib/firebase/auth';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Separator } from '@/components/ui/separator';
+import { signUpWithEmail } from '@/lib/firebase/auth';
 
 const formSchema = z.object({
   name: z.string().min(2, {message: 'Name must be at least 2 characters.'}),
@@ -66,24 +64,6 @@ export default function SignupPage() {
         router.push('/login');
     }
   }
-  
-  const handleGoogleSignIn = async () => {
-    const { error } = await signInWithGoogle('reseller');
-    if (error) {
-      toast({
-        title: 'Error signing in with Google',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Success!',
-        description: 'You have successfully signed in.',
-      });
-      router.push('/account');
-    }
-  };
-
 
   return (
     <div className="container py-12">
@@ -135,19 +115,24 @@ export default function SignupPage() {
                         </FormItem>
                         )}
                     />
+                     <FormField
+                        control={form.control}
+                        name="role"
+                        render={({ field }) => (
+                            <FormItem className="hidden">
+                                <FormLabel>Role</FormLabel>
+                                <FormControl>
+                                    <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                        />
                     <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                         {form.formState.isSubmitting ? 'Creating account...' : 'Sign Up with Email'}
                     </Button>
                     </form>
                 </Form>
-                 <Separator className="my-6" />
-                 <div className="space-y-4">
-                    <p className="text-center text-sm text-muted-foreground">Or sign up as a Reseller with</p>
-                    <Button onClick={handleGoogleSignIn} variant="outline" className="w-full">
-                        Sign Up with Google
-                    </Button>
-                     <p className="text-center text-sm text-muted-foreground">Admin sign-in is available via Google on the login page.</p>
-                 </div>
                 <div className="mt-4 text-center text-sm">
                     Already have an account?{' '}
                     <Link href="/login" className="underline">
