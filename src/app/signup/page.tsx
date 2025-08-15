@@ -30,7 +30,7 @@ const formSchema = z.object({
   password: z.string().min(6, {
     message: 'Password must be at least 6 characters.',
   }),
-  role: z.enum(['customer', 'reseller', 'admin'], {
+  role: z.enum(['customer', 'reseller'], {
     required_error: "You need to select a role."
   })
 });
@@ -62,14 +62,16 @@ export default function SignupPage() {
     } else {
         toast({
             title: 'Success!',
-            description: 'Your account has been created.',
+            description: role === 'reseller' 
+                ? "Your account has been created and is pending approval."
+                : 'Your account has been created.',
         });
-        router.push('/account');
+        router.push(role === 'reseller' ? '/login' : '/account');
     }
   }
   
   const handleGoogleSignIn = async () => {
-    const role = selectedRole === 'admin' ? 'admin' : 'customer';
+    const role = selectedRole;
     const { error } = await signInWithGoogle(role);
     if (error) {
       toast({
@@ -147,7 +149,7 @@ export default function SignupPage() {
                             <RadioGroup
                               onValueChange={field.onChange}
                               defaultValue={field.value}
-                              className="flex flex-col space-y-1"
+                              className="flex space-x-4"
                             >
                               <FormItem className="flex items-center space-x-3 space-y-0">
                                 <FormControl>
@@ -165,14 +167,6 @@ export default function SignupPage() {
                                   Reseller
                                 </FormLabel>
                               </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0" >
-                                <FormControl>
-                                  <RadioGroupItem value="admin" disabled/>
-                                </FormControl>
-                                <FormLabel className="font-normal text-muted-foreground">
-                                  Admin (Google Sign-in only)
-                                </FormLabel>
-                              </FormItem>
                             </RadioGroup>
                           </FormControl>
                           <FormMessage />
@@ -185,9 +179,13 @@ export default function SignupPage() {
                     </form>
                 </Form>
                  <Separator className="my-6" />
-                 <Button onClick={handleGoogleSignIn} variant="outline" className="w-full">
-                    Sign Up with Google
-                 </Button>
+                 <div className="space-y-4">
+                    <p className="text-center text-sm text-muted-foreground">Or sign up as a Customer or Reseller with</p>
+                    <Button onClick={handleGoogleSignIn} variant="outline" className="w-full">
+                        Sign Up with Google
+                    </Button>
+                     <p className="text-center text-sm text-muted-foreground">Admin sign-in is available via Google on the login page.</p>
+                 </div>
                 <div className="mt-4 text-center text-sm">
                     Already have an account?{' '}
                     <Link href="/login" className="underline">

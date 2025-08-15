@@ -39,14 +39,39 @@ export async function getUserProfile(userId: string): Promise<{ profile: UserPro
         if (docSnap.exists()) {
             return { profile: { uid: docSnap.id, ...docSnap.data() } as UserProfile };
         } else {
-            return { profile: null };
+            // To handle cases where a user might exist in Auth but not in Firestore
+            return { profile: null, error: { code: 'not-found', message: 'User profile not found in Firestore.'} };
         }
     } catch (error) {
         return { error };
     }
 }
 
+export async function getAllUsers(): Promise<{ users: UserProfile[] } | { error: any }> {
+  try {
+    const querySnapshot = await getDocs(usersCollection);
+    const users = querySnapshot.docs.map(doc => ({
+      uid: doc.id,
+      ...doc.data(),
+    })) as UserProfile[];
+    return { users };
+  } catch (error) {
+    return { error };
+  }
+}
 
+export async function updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<{ success: boolean } | { error: any }> {
+  try {
+    const docRef = doc(usersCollection, userId);
+    await updateDoc(docRef, data);
+    return { success: true };
+  } catch (error) {
+    return { error };
+  }
+}
+
+
+// PRODUCTS
 // CREATE
 export async function addProduct(
   product: Omit<Product, 'id'>

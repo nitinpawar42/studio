@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, Search, X, User, Shield } from 'lucide-react';
+import { Menu, Search, X, User, Shield, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -51,12 +51,12 @@ export default function Header() {
             </div>
         </div>
 
-        <nav className="hidden md:flex items-center space-x-6 text-lg font-medium ml-auto">
+        <nav className="hidden md:flex items-center space-x-2 text-lg font-medium ml-auto">
             {mainNav.map((item) =>
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="transition-colors hover:text-primary"
+                  className="transition-colors hover:text-primary px-4 py-2 rounded-md text-sm"
                 >
                   {item.label}
                 </Link>
@@ -68,12 +68,20 @@ export default function Header() {
                 </Link>
             </Button>
             {user && (
+                <>
                  <Button variant="ghost" size="icon" asChild>
                     <Link href="/admin/products">
                         <Shield />
-                        <span className="sr-only">Admin</span>
+                        <span className="sr-only">Admin Products</span>
                     </Link>
                 </Button>
+                 <Button variant="ghost" size="icon" asChild>
+                    <Link href="/admin/users">
+                        <Users />
+                        <span className="sr-only">Admin Users</span>
+                    </Link>
+                </Button>
+                </>
             )}
         </nav>
 
@@ -106,7 +114,12 @@ export default function Header() {
                     </Link>
                 )}
                  <Link href="/account" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Account</Link>
-                 {user && <Link href="/admin/products" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Admin</Link>}
+                 {user && (
+                    <>
+                        <Link href="/admin/products" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Admin: Products</Link>
+                        <Link href="/admin/users" className="py-2 text-xl transition-colors hover:text-primary" onClick={() => setMobileMenuOpen(false)}>Admin: Users</Link>
+                    </>
+                 )}
               </nav>
             </div>
           </SheetContent>
