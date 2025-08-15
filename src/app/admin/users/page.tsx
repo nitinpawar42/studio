@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import type { UserProfile } from '@/types';
-import { getAllUsers, updateUserProfile } from '@/lib/firebase/firestore';
+import { getAllUsers } from '@/lib/firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 

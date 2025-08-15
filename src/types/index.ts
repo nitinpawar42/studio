@@ -35,7 +35,6 @@ export interface UserProfile {
   email: string | null;
   displayName: string | null;
   role: 'reseller' | 'admin';
-  approved: boolean;
   mobile?: string;
   aadhar?: string;
   pan?: string;

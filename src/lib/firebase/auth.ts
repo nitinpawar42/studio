@@ -14,7 +14,7 @@ const ADMIN_EMAIL = 'nitinpawar41@gmail.com';
 const ADMIN_PASSWORD = 'Nirved@12345';
 
 export async function registerReseller(
-  data: Omit<UserProfile, 'uid' | 'role' | 'approved'> & { password: string }
+  data: Omit<UserProfile, 'uid' | 'role'> & { password: string }
 ) {
   const { email, password, displayName, ...rest } = data;
   try {
@@ -37,7 +37,6 @@ export async function registerReseller(
                 displayName: 'Admin',
                 email: adminUser.email,
                 role: 'admin',
-                approved: true,
             };
             await createUserProfile(adminUser.uid, adminProfileData);
             
@@ -66,7 +65,6 @@ export async function registerReseller(
         displayName,
         email: user.email,
         role: 'reseller',
-        approved: true, // Resellers are now approved by default
         ...rest,
     };
 
