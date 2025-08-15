@@ -6,12 +6,13 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 import { createUserProfile, getUserProfile } from './firestore';
 import type { UserProfile } from '@/types';
 
-const DEFAULT_ADMIN_EMAIL = 'nitinpawar41@gmail.com';
-const DEFAULT_ADMIN_PASSWORD = 'Nirved@12345';
+const ADMIN_EMAIL = 'nitinpawar41@gmail.com';
 
 export async function registerReseller(
   data: Omit<UserProfile, 'uid' | 'role' | 'approved'> & { password: string }
@@ -46,39 +47,51 @@ export async function registerReseller(
   }
 }
 
-async function createDefaultAdminIfNeeded() {
-    // This is a simplified check. In a real-world scenario, you might query
-    // Firestore to see if an admin user document exists.
-    try {
-        await signInWithEmailAndPassword(auth, DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD);
-    } catch(error: any) {
-        if (error.code === 'auth/user-not-found') {
-             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD);
-                const user = userCredential.user;
-                await updateProfile(user, { displayName: 'Admin' });
+export async function signInWithGoogleAsAdmin() {
+  const provider = new GoogleAuthProvider();
+  try {
+    const userCredential = await signInWithPopup(auth, provider);
+    const user = userCredential.user;
 
-                await createUserProfile(user.uid, {
-                    displayName: 'Admin',
-                    email: user.email,
-                    role: 'admin',
-                    approved: true,
-                });
-                console.log('Default admin created');
-             } catch(createError) {
-                 console.error("Failed to create default admin", createError);
-             }
-        }
+    if (user.email !== ADMIN_EMAIL) {
+      await firebaseSignOut(auth);
+      return { user: null, error: { message: 'This account is not authorized for admin access.' } };
     }
+
+    // Check if user profile exists, if not, create it
+    let profileResult = await getUserProfile(user.uid);
+
+    if (profileResult.error && (profileResult.error as any).code === 'not-found') {
+      const adminProfileData: Omit<UserProfile, 'uid'> = {
+        email: user.email,
+        displayName: user.displayName || 'Admin',
+        role: 'admin',
+        approved: true,
+      };
+      await createUserProfile(user.uid, adminProfileData);
+      profileResult = await getUserProfile(user.uid);
+    }
+
+    if (profileResult.error) {
+      await firebaseSignOut(auth);
+      return { user: null, error: profileResult.error };
+    }
+    
+    const profile = (profileResult as { profile: UserProfile | null }).profile;
+
+    if (profile?.role !== 'admin') {
+       await firebaseSignOut(auth);
+       return { user: null, error: { message: 'This account does not have admin privileges.' } };
+    }
+    
+    return { user, error: null };
+  } catch (error: any) {
+    return { user: null, error };
+  }
 }
 
 
-export async function signInWithEmail(email: string, password: string, role: 'admin' | 'reseller') {
-  
-  if(email.toLowerCase() === DEFAULT_ADMIN_EMAIL) {
-      await createDefaultAdminIfNeeded();
-  }
-
+export async function signInWithEmail(email: string, password: string) {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -91,9 +104,9 @@ export async function signInWithEmail(email: string, password: string, role: 'ad
     }
     
     // Check if the role matches
-    if(profile.role !== role) {
+    if(profile.role !== 'reseller') {
         await firebaseSignOut(auth);
-        return { user: null, error: { message: `You are not authorized to log in as a ${role}.` } };
+        return { user: null, error: { message: `You are not authorized to log in as a reseller.` } };
     }
 
     if (profile.role === 'reseller' && !profile.approved) {
@@ -103,9 +116,6 @@ export async function signInWithEmail(email: string, password: string, role: 'ad
     
     return { user: userCredential.user, error: null };
   } catch (error: any) {
-    if(error.code === 'auth/user-not-found' && email.toLowerCase() === DEFAULT_ADMIN_EMAIL) {
-         return { user: null, error: { message: "Admin account not found. It will be created on next attempt." } };
-    }
     return { user: null, error };
   }
 }
