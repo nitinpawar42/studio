@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from '@/lib/firebase/auth';
 import { getUserProfile } from '@/lib/firebase/firestore';
 import type { UserProfile } from '@/types';
@@ -17,6 +17,7 @@ export default function AccountPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -44,21 +45,32 @@ export default function AccountPage() {
     router.push('/');
   };
 
-  if (loading || authLoading || !profile) {
+  if (loading || authLoading) {
     return (
       <div className="container py-12 flex justify-center items-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
-  
-  // Redirect Admin to their dashboard
-  if (profile.role === 'admin') {
+
+  // Redirect Admin to their dashboard, but prevent a redirect loop if already there.
+  if (profile?.role === 'admin' && !pathname.startsWith('/admin')) {
       router.push('/admin/products');
-      return  <div className="container py-12 flex justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>;
+      return (
+        <div className="container py-12 flex justify-center items-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      );
   }
+  
+  if (!profile) {
+     return (
+      <div className="container py-12 flex justify-center items-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
 
   return (
     <div className="container py-12">
